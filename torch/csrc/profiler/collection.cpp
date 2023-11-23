@@ -200,7 +200,7 @@ auto InputOutputEncoder::getIValueGenerator(const IOType& io_type) {
     std::vector<op_input_t> out;
     auto push_value = [&out, io_type](const Tag& tag, op_input_t input) {
       if (io_type == tagToIOType(tag)) {
-        out.push_back(std::move(input));
+        out.emplace_back(std::move(input));
       } else {
         out.emplace_back(c10::nullopt);
       }
@@ -1399,8 +1399,7 @@ RecordQueue::getRecords(
     materialize(queue.ooms_);
 
     for (auto& i : queue.py_calls_) {
-      python_enters.push_back(
-          {i.first, queue.tid(), queue.kineto_info(), converter(i.second)});
+      python_enters.emplace_back(i.first, queue.tid(), queue.kineto_info(), converter(i.second));
     }
   }
 

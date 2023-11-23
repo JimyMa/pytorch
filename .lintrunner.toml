@@ -244,6 +244,7 @@ include_patterns = [
     'aten/src/ATen/core/*.cpp',
     'c10/**/*.cpp',
     'torch/csrc/**/*.cpp',
+    'torch/csrc/**/*.h',
 ]
 exclude_patterns = [
     # The negative filters below are to exclude files that include onnx_pb.h or
@@ -268,6 +269,7 @@ exclude_patterns = [
     'torch/csrc/lazy/**/*',
     'torch/csrc/onnx/init.cpp',
     'torch/csrc/mps/**/*',
+    'torch/csrc/utils/throughput_benchmark-inl.h',
 ]
 init_command = [
     'python3',

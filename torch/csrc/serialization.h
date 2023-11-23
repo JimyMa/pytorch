@@ -1,6 +1,8 @@
 #ifndef THP_SERIALIZATION_INC
 #define THP_SERIALIZATION_INC
 
+#include <c10/core/StorageImpl.h>
+
 template <class io>
 void doRead(io fildes, void* buf, size_t nbytes);
 

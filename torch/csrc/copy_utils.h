@@ -1,5 +1,6 @@
 #pragma once
 
+#include <torch/csrc/python_headers.h>
 #include <torch/csrc/Types.h>
 #include <functional>
 #include <vector>

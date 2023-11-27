@@ -118,7 +118,7 @@ inline void rebase_history(Variable& var, std::shared_ptr<Node> grad_fn) {
 
 inline void rebase_history(
     std::vector<Variable>&& vars,
-    std::shared_ptr<Node> grad_fn) {
+    const std::shared_ptr<Node>& grad_fn) {
   if (grad_fn) {
     for (auto& var : vars) {
       if (var.defined()) {
@@ -137,6 +137,7 @@ inline void increment_version(const at::Tensor& t) {
 
 struct Flatten : IterArgs<Flatten> {
   Flatten(variable_list& out) : out(out) {}
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
   variable_list& out;
   void operator()(const at::Tensor& x) {
     out.emplace_back(x);

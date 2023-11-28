@@ -1399,7 +1399,8 @@ RecordQueue::getRecords(
     materialize(queue.ooms_);
 
     for (auto& i : queue.py_calls_) {
-      python_enters.push_back({i.first, queue.tid(), queue.kineto_info(), converter(i.second)});
+      python_enters.push_back(
+          {i.first, queue.tid(), queue.kineto_info(), converter(i.second)});
     }
   }
 

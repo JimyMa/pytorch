@@ -78,9 +78,9 @@ bool _use_cudnn_ctc_loss(
     int64_t BLANK) {
   auto& ctx = at::globalContext();
 
-  bool use_cudnn = ctx.userEnabledCuDNN() && ((BLANK == 0) &&
+  bool use_cudnn = ctx.userEnabledCuDNN() && (((BLANK == 0) &&
       (targets.dim() == 1) && (log_probs.scalar_type() == at::kFloat) &&
-      (targets.scalar_type() == at::kInt) || ctx.userForceCuDNN()) &&
+      (targets.scalar_type() == at::kInt)) || ctx.userForceCuDNN()) &&
       (log_probs.device().type() == at::kCUDA);
 
   if (use_cudnn) {

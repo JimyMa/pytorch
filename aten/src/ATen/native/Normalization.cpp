@@ -529,7 +529,7 @@ std::tuple<Tensor, Tensor, Tensor, Tensor, int64_t> _batch_norm_impl_index(
 
   const bool use_cudnn = (
       input.is_cuda()
-      && (cudnn_enabled && at::globalContext().userForceCuDNN())
+      && ((cudnn_enabled && at::globalContext().userForceCuDNN())
          || (input.scalar_type() != at::kBFloat16 && weight.scalar_type() != at::kBFloat16
          && (input.scalar_type() != at::kHalf
            || weight.scalar_type() == at::kFloat)
@@ -543,7 +543,7 @@ std::tuple<Tensor, Tensor, Tensor, Tensor, int64_t> _batch_norm_impl_index(
          && eps >= detail::getCUDAHooks().batchnormMinEpsilonCuDNN()
          && cudnn_enabled
          && input.sym_numel() < std::numeric_limits<std::int32_t>::max() // some cuDNN kernels have 32-bit indexing limitations
-         ));
+         )));
 
   if (use_cudnn) {
     auto input_c = input.contiguous(input.suggest_memory_format());

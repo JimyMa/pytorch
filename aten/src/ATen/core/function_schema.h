@@ -28,12 +28,12 @@ bool operator==(const Argument& lhs, const Argument& rhs);
 struct Argument {
   Argument(
       std::string name = "",
-      const TypePtr& type = nullptr,
+      TypePtr type = nullptr,
       c10::optional<int32_t> N = c10::nullopt,
       c10::optional<IValue> default_value = c10::nullopt,
       bool kwarg_only = false,
       c10::optional<AliasInfo> alias_info = c10::nullopt)
-    : Argument(std::move(name), type, type, N, std::move(default_value), kwarg_only, std::move(alias_info)) {}
+    : Argument(std::move(name), type, std::move(type), N, std::move(default_value), kwarg_only, std::move(alias_info)) {}
 
   Argument(
       std::string name,

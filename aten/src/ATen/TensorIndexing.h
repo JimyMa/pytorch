@@ -318,7 +318,7 @@ static inline c10::List<c10::optional<Tensor>> typeConvertIndices(
     std::vector<Tensor>&& indices) {
   c10::List<c10::optional<Tensor>> converted_inds;
   converted_inds.reserve(indices.size());
-  for (const auto& i : indices) {
+  for (auto& i : indices) {
     converted_inds.push_back(std::move(i));
   }
   return converted_inds;
@@ -536,7 +536,7 @@ static inline Tensor applySlicing(
         /*index=*/obj,
         /*dim=*/&dim,
         /*specified_dims_ptr=*/&specified_dims,
-        /*real_dim=*/i,
+        /*real_dim=*/static_cast<int64_t>(i),
         /*outIndices=*/outIndices,
         /*disable_slice_optimization=*/disable_slice_optimization,
         /*original_tensor_device=*/self_device,

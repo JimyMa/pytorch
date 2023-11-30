@@ -213,11 +213,13 @@ class TestPoitwiseOps(torch.nn.Module):
         sigmoid_2 = [torch.sigmoid(tanh_2[i]) for i in range(len(tanh_2))]
         relu_1 = [torch.nn.functional.relu(sigmoid_1[i]) for i in range(len(sigmoid_1))]
         relu_2 = [torch.nn.functional.relu(sigmoid_2[i]) for i in range(len(sigmoid_2))]
-        return torch.cat(relu_1, dim=1) + torch.cat(relu_2, dim=1)
+        tanh = [x + y for x, y in zip(relu_1, relu_2)]
+        sigmoid = [x * x for x in tanh]
+        return torch.cat(sigmoid, dim=1)
 
 
 @requires_cuda()
-@torch._inductor.config.patch(post_grad_fusion_options={"group_linear": {}})
+@torch._inductor.config.patch(post_grad_group_fusion_options={"group_linear": {}})
 class TestGroupBatchFusion(TestCase):
     def compare_dict_tensors(self, ref_dict, res_dict, rtol=1e-3, atol=1e-3):
         if len(set(ref_dict.keys())) != len(set(res_dict.keys())):
@@ -263,7 +265,7 @@ class TestGroupBatchFusion(TestCase):
             )
             self.assertEqual(
                 counters["inductor"]["batch_fusion"],
-                0,
+                2,
             )
             ref.sum().backward()
             res.sum().backward()
@@ -275,7 +277,7 @@ class TestGroupBatchFusion(TestCase):
             )
             self.assertEqual(
                 counters["inductor"]["batch_fusion"],
-                0,
+                5,
             )
             counters.clear()
 
@@ -306,7 +308,7 @@ class TestGroupBatchFusion(TestCase):
         )
         self.assertEqual(
             counters["inductor"]["batch_fusion"],
-            0,
+            1,
         )
         counters.clear()
 
@@ -397,7 +399,7 @@ class TestGroupBatchFusion(TestCase):
         ref = module(*input)
         res = traced(*input)
         self.compare_pred(module, traced, input)
-        self.assertEqual(counters["inductor"]["batch_fusion"], 3)
+        self.assertEqual(counters["inductor"]["batch_fusion"], 5)
         self.assertEqual(
             counters["inductor"]["scmerge_split_removed"],
             0,

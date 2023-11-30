@@ -104,8 +104,12 @@ pre_grad_fusion_options: Dict[str, Dict[str, Any]] = {
 
 # Post grad group/batch fusion and options, set to empty dict to disable fusion.
 # Call `torch._inductor.fx_passes.group_batch_fusion.list_group_batch_fusions(False)` to see available fusions.
-post_grad_fusion_options: Dict[str, Dict[str, Any]] = {}
+post_grad_group_fusion_options: Dict[str, Dict[str, Any]] = {}
 
+post_grad_batch_fusion_options: Dict[str, Dict[str, Any]] = {
+    "batch_aten_add": {},
+    "batch_aten_mul": {},
+}
 # enable reordering pass for improving memory locality
 reorder_for_locality = True
 

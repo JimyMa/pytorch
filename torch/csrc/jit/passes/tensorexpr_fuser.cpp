@@ -793,6 +793,25 @@ class TensorExprFuser {
       nodes_to_merge.push_back(listconstruct);
     }
 
+    if ((to_merge->matches(
+             "immut::reshape(Tensor self, int[] size) -> Tensor") ||
+         to_merge->matches(
+             "immut::expand(Tensor self, int[] size, *, bool implicit) -> Tensor") ||
+         to_merge->matches(
+             "immut::repeat(Tensor self, int[] size) -> Tensor") ||
+         to_merge->matches(
+             "immut::index.Tensor(Tensor self, Tensor?[] indices) -> Tensor") ||
+         to_merge->matches("immut::view(Tensor self, int[] size) -> Tensor")) &&
+        to_merge->input(1)->node()->kind() == prim::ListConstruct) {
+      Node* listconstruct = to_merge->input(1)->node();
+      Node* listconstruct_copy = listconstruct->owningGraph()->create(
+          prim::ListConstruct, listconstruct->inputs(), 1);
+      listconstruct_copy->output()->copyMetadata(listconstruct->output());
+      listconstruct_copy->insertAfter(listconstruct);
+      to_merge->replaceInput(1, listconstruct_copy->output());
+      nodes_to_merge.push_back(listconstruct_copy);
+    }
+
     // First, try to move all the nodes we want to fuse next to the fusion
     // group.
     Node* move_point = fusion_group;
@@ -1163,6 +1182,15 @@ class TensorExprFuser {
           node->isMemberOf(tensorexpr::getCustomOperatorSet()) ||
           (node->maybeSchema() && shapeComputeGraphForSchema(node->schema())));
     }
+
+    // if (node->matches(
+    //         "immut::index.Tensor(Tensor self, Tensor?[] indices) -> Tensor"))
+    //         {
+    //   auto indices = node->input(1)->node()->inputs();
+    //   if (indices.front()->type()->cast<TensorType>()->scalarType() !=
+    //       c10::kLong) // static shape only when indices are `long`
+    //     return false;
+    // }
 
     return true;
   }

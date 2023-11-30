@@ -441,6 +441,8 @@ ArgValue TensorExprKernel::toArg(const torch::jit::Value* v) const {
       return convertVecArgValue<BufHandle>(vec);
     } else if (c10::get_if<int64_t>(&vec[0])) {
       return convertVecArgValue<int64_t>(vec);
+    } else {
+      return ArgNone();
     }
     throw unsupported_dtype();
   }
@@ -1223,6 +1225,7 @@ Tensor TensorExprKernel::bindInput(const torch::jit::Value* input) {
       break;
     }
     default: {
+      graph_->dump();
       throw unsupported_dtype(t->repr_str());
       break;
     }

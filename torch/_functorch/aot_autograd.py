@@ -519,14 +519,23 @@ class SubclassCreationMeta:
     #  so holding onto this at runtime shouldn't leak memory)
     original_subclass: torch.Tensor
     # meta and inner_keys are produced by the subclass's __tensor_flatten__.
-    # We need to keep them around to plumb them into __tensor_unflatten__.
+    # We need to keep them around along with outer_size to plumb them into __tensor_unflatten__.
     meta: Any
     inner_keys: List[any]
+    outer_size: Tuple[int]
+    outer_stride: Tuple[int]
 
     def creation_fn(self, all_args, *, is_runtime: bool):
         curr_args = all_args[self.flat_tensor_start_idx:self.flat_tensor_start_idx + self.arg_count]
         assert len(curr_args) == len(self.inner_keys), f'inner_keys: {str(self.inner_keys)}. len(curr_args): {len(curr_args)}'
-        out = type(self.original_subclass).__tensor_unflatten__(dict(zip(self.inner_keys, curr_args)), self.meta)
+        # NB: Sometimes we have real inner tensors and symbolic metadata.
+        # TODO: Resolve this so we always have matching real / symbolic tensors / metadata.
+        out = type(self.original_subclass).__tensor_unflatten__(
+            dict(zip(self.inner_keys, curr_args)),
+            self.meta,
+            self.outer_size,
+            self.outer_stride,
+        )
         if not is_runtime:
             # After wrapping up the inner dense tensors into a subclass, we need to make sure that our new wrapper
             # has correct autograd metadata, since we'll be tracing through the autograd engine with the subclass.
@@ -1046,6 +1055,8 @@ def create_subclass_meta(curr_args: List[Any]) -> List[Union[int, SubclassCreati
                 original_subclass=a,
                 meta=meta,
                 inner_keys=attrs,
+                outer_size=a.shape,
+                outer_stride=a.stride(),
             ))
         else:
             infos.append(idx)

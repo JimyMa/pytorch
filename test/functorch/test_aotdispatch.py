@@ -3611,6 +3611,7 @@ def forward(self, tangents_1, tangents_2):
         self.assertEqual(a_ref_base.grad.a, a_test_base.grad.a)
         self.assertEqual(a_ref_base.grad.b, a_test_base.grad.b)
 
+
 class TestAOTModuleSimplified(AOTTestCase):
     def test_aot_module_simplified(self):
         class MockModule(torch.nn.Module):

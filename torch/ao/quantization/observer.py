@@ -133,11 +133,14 @@ class ObserverBase(ABC, nn.Module):
     Args:
         dtype: dtype argument to the `quantize` node needed to implement the
                reference model spec.
+        is_dynamic: indicator for whether the observer is a placeholder for dynamic quantization
+        or static quantization
     """
 
-    def __init__(self, dtype):
+    def __init__(self, dtype, is_dynamic=False):
         super().__init__()
         self.dtype = dtype
+        self.is_dynamic = False
 
     @abstractmethod
     def forward(self, x):
@@ -207,9 +210,10 @@ class UniformQuantizationObserverBase(ObserverBase):
         quant_max=None,
         factory_kwargs=None,
         eps=torch.finfo(torch.float32).eps,
+        **kwargs,
     ) -> None:
         factory_kwargs = torch.nn.factory_kwargs(factory_kwargs)
-        super().__init__(dtype=dtype)
+        super().__init__(dtype=dtype, **kwargs)
         self.qscheme = qscheme
         if reduce_range:
             warnings.warn(
@@ -463,6 +467,7 @@ class MinMaxObserver(UniformQuantizationObserverBase):
         quant_max=None,
         factory_kwargs=None,
         eps=torch.finfo(torch.float32).eps,
+        **kwargs,
     ) -> None:
         if not is_per_tensor(qscheme):
             raise NotImplementedError(
@@ -483,6 +488,7 @@ class MinMaxObserver(UniformQuantizationObserverBase):
             quant_max=quant_max,
             factory_kwargs=factory_kwargs,
             eps=eps,
+            **kwargs,
         )
         factory_kwargs = torch.nn.factory_kwargs(factory_kwargs)
         self.register_buffer("min_val", torch.tensor(float("inf"), **factory_kwargs))
@@ -584,8 +590,9 @@ class MovingAverageMinMaxObserver(MinMaxObserver):
     ) -> None:
         if not is_per_tensor(qscheme):
             raise NotImplementedError(
-                "MovingAverageMinMaxObserver's qscheme only support \
-                    torch.per_tensor_symmetric and torch.per_tensor_affine."
+                f"MovingAverageMinMaxObserver's qscheme only support \
+                torch.per_tensor_symmetric and torch.per_tensor_affine. \
+                but got: {qscheme}"
             )
         self.averaging_constant = averaging_constant
         super().__init__(
@@ -656,6 +663,7 @@ class PerChannelMinMaxObserver(UniformQuantizationObserverBase):
         quant_max=None,
         factory_kwargs=None,
         eps=torch.finfo(torch.float32).eps,
+        **kwargs,
     ) -> None:
         if not is_per_channel(qscheme):
             raise NotImplementedError(
@@ -670,6 +678,7 @@ class PerChannelMinMaxObserver(UniformQuantizationObserverBase):
             quant_max=quant_max,
             factory_kwargs=factory_kwargs,
             eps=eps,
+            **kwargs,
         )
         factory_kwargs = torch.nn.factory_kwargs(factory_kwargs)
         self.ch_axis = ch_axis
@@ -934,6 +943,7 @@ class HistogramObserver(UniformQuantizationObserverBase):
         quant_max=None,
         factory_kwargs=None,
         eps=torch.finfo(torch.float32).eps,
+        **kwargs,
     ) -> None:
         if not is_per_tensor(qscheme):
             raise NotImplementedError(
@@ -949,6 +959,7 @@ class HistogramObserver(UniformQuantizationObserverBase):
             quant_max=quant_max,
             factory_kwargs=factory_kwargs,
             eps=eps,
+            **kwargs
         )
         factory_kwargs = torch.nn.factory_kwargs(factory_kwargs)
         self.bins = bins
@@ -1296,14 +1307,17 @@ class FixedQParamsObserver(ObserverBase):
     scale: torch.Tensor
     zero_point: torch.Tensor
 
-    def __init__(self,
-                 scale,
-                 zero_point,
-                 dtype=torch.quint8,
-                 qscheme=torch.per_tensor_affine,
-                 quant_min=0,
-                 quant_max=255):
-        super().__init__(dtype=dtype)
+    def __init__(
+        self,
+        scale,
+        zero_point,
+        dtype=torch.quint8,
+        qscheme=torch.per_tensor_affine,
+        quant_min=0,
+        quant_max=255,
+        **kwargs,
+    ):
+        super().__init__(dtype=dtype, **kwargs)
         self.quant_min = quant_min
         self.quant_max = quant_max
         self.register_buffer('scale', torch.tensor([scale], dtype=torch.float))
